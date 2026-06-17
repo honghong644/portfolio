@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>智采灵枢 — 项目详情 / 刘思敏</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;700&family=Noto+Sans+SC:wght@300;400;500&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --rock:#1A1A1A;
+    --rock-deep:#151515;
+    --terra:#C97B63;
+    --steel:#5b7385;            /* cool counter-tone for crisis imagery */
+    --white:#F5F5F5;
+    --ink:rgba(245,245,245,.68);
+    --mute:rgba(245,245,245,.40);
+    --faint:rgba(245,245,245,.13);
+    --hair:rgba(245,245,245,.08);
+    --serif:"Noto Serif SC", serif;
+    --sans:"Noto Sans SC", sans-serif;
+    --mono:"Space Mono", monospace;
+    --ease-out:cubic-bezier(.16,1,.3,1);
+    --ease-back:cubic-bezier(.34,1.4,.5,1);
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  html, body{
+    background:var(--rock); color:var(--ink);
+    font-family:var(--sans); font-weight:400;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  }
+  body{ overflow-x:hidden; }
+  html.cursor-custom, html.cursor-custom *{ cursor:none !important; }
+  @media (pointer:coarse){ html.cursor-custom, html.cursor-custom *{ cursor:auto !important; } }
+  a{ color:inherit; text-decoration:none; }
+  ::selection{ background:rgba(201,123,99,.3); color:var(--white); }
+
+  body{ opacity:1; transition:opacity .5s var(--ease-out); }
+  body.leaving{ opacity:0; }
+
+  /* ---------- subtle atmosphere + grain (cooler, restrained) ---------- */
+  .atmos{ position:fixed; inset:-20%; z-index:0; pointer-events:none; opacity:.42; }
+  .atmos::before{
+    content:""; position:absolute; inset:0;
+    background:
+      radial-gradient(42% 46% at 22% 24%, rgba(91,115,133,.05), transparent 60%),
+      radial-gradient(44% 48% at 80% 74%, rgba(201,123,99,.035), transparent 62%);
+    filter:blur(48px); will-change:transform; animation:drift 46s ease-in-out infinite alternate;
+  }
+  @keyframes drift{ 0%{ transform:translate3d(0,0,0) scale(1); } 100%{ transform:translate3d(-2%,2%,0) scale(1.08); } }
+  .grain{
+    position:fixed; inset:-30px; z-index:1; pointer-events:none; opacity:.4; mix-blend-mode:soft-light;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size:200px 200px;
+  }
+
+  /* ---------- top navigation ---------- */
+  .nav{
+    position:fixed; top:0; left:0; right:0; z-index:50;
+    display:flex; justify-content:space-between; align-items:center;
+    height:62px; padding:0 clamp(20px,5vw,56px);
+    background:rgba(20,20,20,.62);
+    -webkit-backdrop-filter:blur(16px) saturate(1.2); backdrop-filter:blur(16px) saturate(1.2);
+    border-bottom:1px solid var(--hair);
+  }
+  .nav-back{
+    display:inline-flex; align-items:center; gap:10px;
+    font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--mute); transition:color .4s var(--ease-out);
+  }
+  .nav-back .ba{ display:inline-block; transition:transform .4s var(--ease-back); color:var(--terra); }
+  .nav-back:hover{ color:var(--white); }
+  .nav-back:hover .ba{ transform:translateX(-6px); }
+  .nav-prog{ font-family:var(--mono); font-size:12px; letter-spacing:.2em; color:var(--mute); }
+  .nav-prog b{ color:var(--terra); font-weight:400; }
+  .nav-right{ display:flex; align-items:center; gap:22px; }
+  .nav-about{ font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--mute); transition:color .4s var(--ease-out); }
+  .nav-about:hover{ color:var(--white); }
+
+  /* ---------- shell ---------- */
+  .shell{ position:relative; z-index:2; max-width:1360px; margin:0 auto; padding:0 clamp(20px,4vw,48px); }
+
+  /* ---------- header (LEFT-aligned, airy) ---------- */
+  .head{ text-align:left; padding:14vh 0 7vh; max-width:720px; }
+  .head-eyebrow{
+    font-family:var(--mono); font-size:11px; letter-spacing:.34em; text-transform:uppercase; color:var(--mute);
+  }
+  /* Shrinking Hero title — fixed (out of flow), driven by hero-morph.js.
+     transform-only morph: never touches layout. Direct child of <body>. */
+  .head-title{
+    position:fixed; top:18px; left:0; margin:0; z-index:60;
+    white-space:nowrap; text-align:left; pointer-events:none;
+    font-family:var(--serif); font-weight:700;
+    font-size:clamp(2.4rem, 7.2vw, 5rem); line-height:1; letter-spacing:.04em; color:var(--terra);
+    transform-origin:left top; will-change:transform, color;
+    transform:translate(clamp(20px,4vw,48px), 22vh) scale(1);
+  }
+  @media (pointer:coarse){ .head-title{ font-size:clamp(2rem, 9vw, 3.4rem); } }
+  .head-intro{
+    margin-top:34vh; /* reserve the Hero space the fixed morphing title overlays */
+    font-size:14px; font-weight:300; line-height:2.05; color:var(--mute); letter-spacing:.01em;
+    max-width:50ch; text-wrap:pretty;
+  }
+
+  /* ---------- meta (3 cols, hairlines) ---------- */
+  .meta{
+    display:grid; grid-template-columns:repeat(3,1fr);
+    border-top:1px solid var(--faint); border-bottom:1px solid var(--faint); margin-bottom:13vh;
+  }
+  .meta-cell{ padding:32px 0 32px 32px; border-left:1px solid var(--faint); }
+  .meta-cell:first-child{ border-left:0; padding-left:0; }
+  .meta-k{
+    font-family:var(--mono); font-size:11px; letter-spacing:.24em; text-transform:uppercase;
+    color:var(--mute); margin-bottom:14px;
+  }
+  .meta-v{ font-size:14px; font-weight:400; line-height:1.7; color:var(--white); letter-spacing:.01em; }
+  .meta-v span{ color:var(--mute); }
+
+  /* ---------- personal contribution block (line accent, not a card) ---------- */
+  .role-note{ margin:5vh 0 1vh; padding:6px 0 6px 22px; border-left:2px solid var(--terra); max-width:880px; }
+  .role-note-k{ font-family:var(--mono); font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:var(--terra); margin-bottom:12px; }
+  .role-note-t{ font-size:14px; line-height:2.0; color:var(--ink); font-weight:400; letter-spacing:.012em; text-wrap:pretty; }
+  .role-note-t b{ color:var(--white); font-weight:500; }
+
+  /* ---------- story: 20% sidebar / 80% main ---------- */
+  .story{ display:grid; grid-template-columns:16% 1fr; gap:clamp(32px,4vw,60px); padding-bottom:12vh; }
+
+  .toc{ position:sticky; top:120px; align-self:start; min-width:0; }
+  .toc-label{
+    font-family:var(--mono); font-size:11px; letter-spacing:.26em; text-transform:uppercase;
+    color:var(--mute); margin-bottom:24px;
+  }
+  .toc-list{ list-style:none; display:flex; flex-direction:column; gap:2px; }
+  .toc-link{
+    display:flex; align-items:baseline; gap:11px; padding:9px 0;
+    font-size:13px; font-weight:400; letter-spacing:.02em; color:var(--mute);
+    transition:color .4s var(--ease-out); position:relative;
+  }
+  .toc-link .tn{ font-family:var(--mono); font-size:11px; color:var(--faint); transition:color .4s var(--ease-out); }
+  .toc-link::before{
+    content:""; position:absolute; left:-18px; top:50%; width:7px; height:1px;
+    background:var(--terra); transform:scaleX(0); transform-origin:left; transition:transform .4s var(--ease-out);
+  }
+  .toc-link:hover{ color:var(--white); }
+  .toc-link.active{ color:var(--white); }
+  .toc-link.active .tn{ color:var(--terra); }
+  .toc-link.active::before{ transform:scaleX(1); }
+
+  .main{ max-width:940px; min-width:0; }
+
+  .chap{ padding-bottom:11vh; scroll-margin-top:108px; }
+  .chap:last-child{ padding-bottom:0; }
+  .chap-no{
+    font-family:var(--mono); font-size:11px; letter-spacing:.26em; text-transform:uppercase;
+    color:var(--terra); margin-bottom:18px; display:block;
+  }
+  .chap-h{
+    font-family:var(--serif); font-weight:500; font-size:1.4rem; line-height:1.32;
+    color:var(--white); letter-spacing:.02em; margin-bottom:26px;
+  }
+  .chap p{
+    font-size:14.5px; font-weight:400; line-height:2.05; color:var(--ink); letter-spacing:.012em;
+    margin-bottom:20px; text-wrap:pretty;
+  }
+  .chap p:last-child{ margin-bottom:0; }
+  .chap strong{ color:var(--white); font-weight:500; }
+  .chap .hot{ color:var(--terra); font-weight:400; }
+
+  /* a restrained "two logics" list — lines, not cards */
+  .logic{ list-style:none; margin:30px 0 8px; border-top:1px solid var(--hair); }
+  .logic li{ padding:22px 0; border-bottom:1px solid var(--hair); display:grid; grid-template-columns:96px 1fr; gap:18px; align-items:baseline; }
+  @media (max-width:520px){ .logic li{ grid-template-columns:1fr; gap:8px; } }
+  .logic .lk{ font-family:var(--mono); font-size:11px; letter-spacing:.18em; color:var(--terra); white-space:nowrap; padding-top:3px; }
+  .logic .lt{ font-size:14px; line-height:1.9; color:var(--ink); }
+  .logic .lt b{ color:var(--white); font-weight:500; display:block; margin-bottom:5px; font-size:14.5px; }
+
+  /* inline figure — cool-toned, book-illustration scale */
+  .fig{ margin:40px 0 8px; }
+  .fig-frame{ position:relative; width:100%; aspect-ratio:16/9; overflow:hidden; background:var(--rock-deep); border:1px solid var(--hair); }
+  .fig-frame::after{ content:""; position:absolute; inset:0; background:rgba(91,115,133,.16); mix-blend-mode:overlay; pointer-events:none; }
+  .fig-img{ display:block; width:100%; height:100%; }
+  .fig-img::part(img){ filter:grayscale(.5) brightness(.95) contrast(1.02); transition:filter .6s var(--ease-out); }
+  .fig:hover .fig-img::part(img){ filter:grayscale(.15) brightness(1); }
+  /* frame ratios for "show full image" (contain) figures — UI screens / boards */
+  .fig.fig-r32 .fig-frame{ aspect-ratio:3/2; }
+  .fig.fig-r11 .fig-frame{ aspect-ratio:1/1; max-width:560px; }
+  .fig.fig-r34 .fig-frame{ aspect-ratio:3/4; max-width:600px; }
+  .fig.fig-r32 .fig-frame::after, .fig.fig-r11 .fig-frame::after, .fig.fig-r34 .fig-frame::after{ display:none; }
+  .fig-cap{
+    margin-top:14px; font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--mute); display:flex; gap:10px;
+  }
+  .fig-cap b{ color:var(--terra); font-weight:400; }
+
+  /* ---------- Service Blueprint (inline horizontal mini-figure) ---------- */
+  .bp{ margin:38px 0 10px; }
+  .bp-title{
+    font-family:var(--mono); font-size:11px; letter-spacing:.22em; text-transform:uppercase;
+    color:var(--mute); margin-bottom:14px; display:flex; gap:10px; align-items:baseline;
+  }
+  .bp-title b{ color:var(--terra); font-weight:400; }
+  .bp-scroll{ overflow-x:auto; border:1px solid var(--hair); scrollbar-width:thin; scrollbar-color:var(--faint) transparent; }
+  .bp-scroll::-webkit-scrollbar{ height:6px; }
+  .bp-scroll::-webkit-scrollbar-thumb{ background:var(--faint); border-radius:3px; }
+  .bp-grid{ display:grid; grid-template-columns:96px repeat(4, minmax(150px,1fr)); min-width:760px; }
+  .bp-cell{ padding:14px 14px; border-right:1px solid var(--hair); border-bottom:1px solid var(--hair); }
+  .bp-grid > .bp-cell:nth-child(5n){ border-right:0; }
+  .bp-phase{
+    font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--terra);
+    display:flex; flex-direction:column; gap:3px; background:rgba(201,123,99,.05);
+  }
+  .bp-phase .pcn{ font-family:var(--sans); font-size:13px; letter-spacing:.04em; color:var(--white); font-weight:500; }
+  .bp-lane{
+    font-family:var(--mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--mute);
+    display:flex; align-items:center; background:var(--rock-deep);
+  }
+  .bp-corner{ background:var(--rock-deep); }
+  .bp-txt{ font-size:12.5px; line-height:1.65; color:var(--ink); }
+  .bp-txt .bh{ color:var(--terra); }
+  .bp-note{ margin-top:12px; font-size:12px; color:var(--mute); line-height:1.7; }
+
+  /* ---------- footer pager ---------- */
+  .pager{
+    display:flex; justify-content:space-between; align-items:stretch;
+    border-top:1px solid var(--faint); position:relative; z-index:2;
+  }
+  .pager a{ flex:1; padding:7vh clamp(20px,5vw,56px); transition:background-color .5s var(--ease-out); }
+  .pager a:hover{ background:rgba(245,245,245,.025); }
+  .pager .pg-next{ text-align:right; border-left:1px solid var(--faint); }
+  .pg-k{
+    font-family:var(--mono); font-size:11px; letter-spacing:.24em; text-transform:uppercase;
+    color:var(--mute); margin-bottom:14px; display:flex; align-items:center; gap:10px;
+  }
+  .pg-next .pg-k{ justify-content:flex-end; }
+  .pg-k .pa{ color:var(--terra); display:inline-block; transition:transform .4s var(--ease-back); }
+  .pager a:hover .pg-k{ color:var(--white); }
+  .pg-prev:hover .pa{ transform:translateX(-6px); }
+  .pg-next:hover .pa{ transform:translateX(6px); }
+  .pg-cn{ font-family:var(--serif); font-weight:500; font-size:clamp(1.3rem,2.4vw,1.85rem); color:var(--white); letter-spacing:.02em; }
+  .pg-en{ font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--mute); margin-top:8px; }
+
+  /* ---------- cursor ---------- */
+  .cursor-ring, .cursor-dot{ position:fixed; top:0; left:0; z-index:9999; pointer-events:none; border-radius:50%; }
+  .cursor-ring{ width:30px; height:30px; border:1.5px solid var(--terra);
+    transition:width .4s var(--ease-back), height .4s var(--ease-back), background-color .4s var(--ease-out); }
+  .cursor-ring.is-hot{ width:64px; height:64px; background:color-mix(in srgb, var(--terra) 14%, transparent); }
+  .cursor-dot{ width:5px; height:5px; background:var(--terra); }
+  .cursor-ring.is-hot ~ .cursor-dot{ opacity:0; }
+  @media (pointer:coarse){ .cursor-ring,.cursor-dot{ display:none; } }
+
+  .reveal{ opacity:0; transform:translateY(22px); transition:opacity .8s var(--ease-out), transform .8s var(--ease-out); }
+  .reveal.in{ opacity:1; transform:none; }
+
+  /* Muzli-style scroll-driven reveal — native CSS (animation-timeline:view()), zero JS.
+     Progressive enhancement: supporting browsers (Chrome/Edge) get scroll-bound float-up
+     tied to the element's position in the viewport; others fall back to the IO above. */
+  @keyframes revealUp{ from{ opacity:0; transform:translateY(56px); } to{ opacity:1; transform:none; } }
+  @supports (animation-timeline: view()){
+    @media (prefers-reduced-motion: no-preference){
+      .reveal{
+        opacity:1; transform:none; transition:none;
+        animation:revealUp linear both;
+        animation-timeline:view();
+        animation-range:entry 2% cover 38%;
+      }
+      /* figures & list rows drift up a touch later/longer for depth */
+      .fig, .logic li{
+        animation:revealUp linear both;
+        animation-timeline:view();
+        animation-range:entry 6% cover 46%;
+      }
+    }
+  }
+
+  /* ---------- responsive ---------- */
+  @media (max-width:820px){
+    .meta{ grid-template-columns:1fr; }
+    .meta-cell{ border-left:0; border-top:1px solid var(--faint); padding:24px 0; }
+    .meta-cell:first-child{ border-top:0; }
+    .story{ grid-template-columns:1fr; gap:40px; }
+    .toc{ position:static; top:auto; }
+    .toc-list{ flex-direction:row; flex-wrap:wrap; gap:8px 18px; }
+    .toc-link::before{ display:none; }
+    .pager{ flex-direction:column; }
+    .pager .pg-next{ border-left:0; border-top:1px solid var(--faint); text-align:left; }
+    .pg-next .pg-k{ justify-content:flex-start; }
+  }
+  @media (prefers-reduced-motion:reduce){
+    html{ scroll-behavior:auto; }
+    .atmos::before{ animation:none; }
+    .reveal{ opacity:1; transform:none; }
+  }
+</style>
+<style>
+  /* ---- 智采灵枢 specifics ---- */
+  .chap .hot{ color:var(--terra); font-weight:500; }
+  .chap .rate-big{
+    color:var(--terra); font-weight:700; font-family:var(--mono); font-size:1.05em;
+    letter-spacing:0; padding:0 .12em;
+  }
+  .fig-frame{ aspect-ratio:16/10; }
+  .fig-frame::after{ display:none; }
+  .fig-img::part(img){ filter:grayscale(.7) contrast(1.02); }
+  .fig:hover .fig-img::part(img){ filter:grayscale(0); }
+</style>
+</head>
+<body>
+  <div class="atmos" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <nav class="nav">
+    <a class="nav-back" href="index.html" data-hot id="navBack">
+      <span class="ba">&larr;</span> Back
+    </a>
+    <div class="nav-right">
+      <a class="nav-about" href="about.html" data-hot>关于</a>
+      <span class="nav-prog"><b>01</b> / 08</span>
+    </div>
+  </nav>
+
+  <h1 class="head-title">智采灵枢</h1>
+
+  <div class="shell">
+    <header class="head reveal">
+      <div class="head-eyebrow">Graduation Project&nbsp;&nbsp;/&nbsp;&nbsp;Hardware Interaction</div>
+      <p class="head-intro">一台为名优茶量身设计的智能采摘设备。以骑跨式履带底盘与温控保鲜舱，把机械化采摘的效率与手工采摘的品质留在同一台机器里。</p>
+    </header>
+
+    <div class="meta reveal">
+      <div class="meta-cell">
+        <div class="meta-k">时间 / Timeline</div>
+        <div class="meta-v">2025.01 <span>—</span> 2025.06</div>
+      </div>
+      <div class="meta-cell">
+        <div class="meta-k">角色 / Role</div>
+        <div class="meta-v">项目负责人 <span>/</span> 交互设计师</div>
+      </div>
+      <div class="meta-cell">
+        <div class="meta-k">工具 / Tools</div>
+        <div class="meta-v">Rhino · Keyshot · Figma · Arduino</div>
+      </div>
+    </div>
+
+    <div class="role-note reveal">
+      <div class="role-note-k">个人贡献 / My Role</div>
+      <p class="role-note-t">作为<b>项目负责人</b>，我主导了从用户研究到落地的全流程：独立完成采茶机的<b>机械结构建模</b>（骑跨式履带底盘、双温区保鲜舱），并设计了<b>操作员端 / 管理员端双端交互系统</b>；统筹团队推进 Rhino 建模、Keyshot 渲染与 Figma 界面的整合，最终把鲜叶红变率从 &gt;15% 压到 &lt;5%。</p>
+    </div>
+
+    <div class="story">
+      <aside class="toc">
+        <div class="toc-label">Contents</div>
+        <ul class="toc-list">
+          <li><a class="toc-link active" href="#ch-pain" data-hot data-spy="ch-pain"><span class="tn">01</span>痛点与机会</a></li>
+          <li><a class="toc-link" href="#ch-struct" data-hot data-spy="ch-struct"><span class="tn">02</span>机械结构设计</a></li>
+          <li><a class="toc-link" href="#ch-ui" data-hot data-spy="ch-ui"><span class="tn">03</span>双端交互系统</a></li>
+          <li><a class="toc-link" href="#ch-result" data-hot data-spy="ch-result"><span class="tn">04</span>核心成果</a></li>
+        </ul>
+      </aside>
+
+      <div class="main">
+        <section class="chap reveal" id="ch-pain">
+          <span class="chap-no">01 — Pain &amp; Opportunity</span>
+          <h2 class="chap-h">痛点与机会</h2>
+          <p>名优茶讲究「一芽一两叶」的手工采摘，但采茶季高度集中、用工成本逐年攀升，熟练采茶工日益短缺。靠人，已经越来越难。</p>
+          <p>传统机械采摘「一刀切」，鲜叶破损严重；离开茶树后若不及时降温，<span class="hot">红变率常超过 15%</span>，直接拉低成品等级与售价。机会因此清晰——做一台能「轻拿轻放」并即时保鲜的设备，把效率与品质同时留下。</p>
+          <figure class="fig">
+            <div class="fig-frame" data-hot>
+              <image-slot id="r-hero" class="fig-img" shape="rect" fit="cover" src="images/zhicai-field2.jpg" placeholder="采茶机整机 / 工业渲染 · 16:10"></image-slot>
+            </div>
+            <figcaption class="fig-cap"><b>Field</b><span>茶园实采 · 应用场景</span></figcaption>
+          </figure>
+        </section>
+
+        <section class="chap reveal" id="ch-struct">
+          <span class="chap-no">02 — Mechanical</span>
+          <h2 class="chap-h">机械结构设计</h2>
+          <p>整机采用<strong>骑跨式履带底盘</strong>，跨越田垄行进；重做履带齿距与张紧机构，抑制松软茶园里的打滑。采摘端以柔性夹持配合切割分离，减少对芽叶的挤压损伤。</p>
+          <p>采下的鲜叶经输送通道进入<strong>温控保鲜舱</strong>——舱体分两个温区，先快速降温锁鲜，再恒温暂存，从源头压制红变的发生。</p>
+          <figure class="fig">
+            <div class="fig-frame" data-hot>
+              <image-slot id="r-structure" class="fig-img" shape="rect" fit="cover" src="images/zhicai-render.jpg" placeholder="机械结构 / 爆炸图 · Rhino 截图"></image-slot>
+            </div>
+            <figcaption class="fig-cap"><b>Keyshot</b><span>整机形态 · 履带底盘</span></figcaption>
+          </figure>
+        </section>
+
+        <section class="chap reveal" id="ch-ui">
+          <span class="chap-no">03 — Interaction</span>
+          <h2 class="chap-h">双端交互系统</h2>
+          <p>设备配套<strong>操作员端</strong>与<strong>管理员端</strong>两套界面，按「现场执行 / 全局管理」分层。</p>
+          <p>操作员端服务田间作业：实时显示行进路径、采净率与舱温，关键操作放大、可单手完成，开机即用。管理员端沉淀产量、设备状态与作业数据，支持多机调度与历史回溯。信息各取所需，互不干扰。</p>
+          <figure class="fig">
+            <div class="fig-frame" data-hot>
+              <image-slot id="r-interface" class="fig-img" shape="rect" fit="cover" src="images/zhicai-ui.jpg" placeholder="双端界面 · Figma 深色模式截图"></image-slot>
+            </div>
+            <figcaption class="fig-cap"><b>Figma / Dark Mode</b><span>操作员端 + 管理员后台</span></figcaption>
+          </figure>
+        </section>
+
+        <section class="chap reveal" id="ch-result">
+          <span class="chap-no">04 — Outcome</span>
+          <h2 class="chap-h">核心成果</h2>
+          <p>通过结构与温控的协同，鲜叶红变率由传统机械采摘的 &gt;15% 压制到 <span class="rate-big">&lt;5%</span>，结构方案经验证 100% 可行。</p>
+          <p>项目作为毕业设计完整落地，覆盖从用户研究、机械建模到双端交互的全流程——也是我对「工程逻辑与美学体验平衡」最完整的一次实践。</p>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <nav class="pager">
+    <a class="pg-prev" href="index.html" data-hot id="pgHome">
+      <span class="pg-k"><span class="pa">&larr;</span> 上一页</span>
+      <div class="pg-cn">主页</div>
+      <div class="pg-en">Homepage</div>
+    </a>
+    <a class="pg-next" href="万物的客舍.html" data-hot>
+      <span class="pg-k">下一页 <span class="pa">&rarr;</span></span>
+      <div class="pg-cn">万物的客舍</div>
+      <div class="pg-en">Everything&apos;s Inn</div>
+    </a>
+  </nav>
+
+  <div class="cursor-ring" aria-hidden="true"></div>
+  <div class="cursor-dot" aria-hidden="true"></div>
+
+  <script src="image-slot.js"></script>
+  <script src="atmosphere.js"></script>
+  <script src="hero-morph.js"></script>
+  <script src="fig-fit.js"></script>
+<script>
+(function () {
+  "use strict";
+  (function () {
+    var fine = window.matchMedia("(pointer: fine)").matches;
+    document.documentElement.classList.toggle("cursor-custom", fine);
+    if (!fine) return;
+    var ring = document.querySelector(".cursor-ring");
+    var dot = document.querySelector(".cursor-dot");
+    var t = { x: innerWidth / 2, y: innerHeight / 2 };
+    var rp = { x: t.x, y: t.y }, dp = { x: t.x, y: t.y };
+    addEventListener("pointermove", function (e) { t.x = e.clientX; t.y = e.clientY; });
+    document.querySelectorAll("[data-hot]").forEach(function (el) {
+      el.addEventListener("pointerenter", function () { ring.classList.add("is-hot"); });
+      el.addEventListener("pointerleave", function () { ring.classList.remove("is-hot"); });
+    });
+    (function loop() {
+      rp.x += (t.x - rp.x) * 0.18; rp.y += (t.y - rp.y) * 0.18;
+      dp.x += (t.x - dp.x) * 0.5;  dp.y += (t.y - dp.y) * 0.5;
+      ring.style.transform = "translate3d(" + rp.x + "px," + rp.y + "px,0) translate(-50%,-50%)";
+      dot.style.transform  = "translate3d(" + dp.x + "px," + dp.y + "px,0) translate(-50%,-50%)";
+      requestAnimationFrame(loop);
+    })();
+  })();
+  function goBack(e) { e.preventDefault(); document.body.classList.add("leaving"); setTimeout(function () { window.location.href = "index.html"; }, 480); }
+  var back = document.getElementById("navBack"); if (back) back.addEventListener("click", goBack);
+  var pgHome = document.getElementById("pgHome"); if (pgHome) pgHome.addEventListener("click", goBack);
+  document.querySelectorAll(".toc-link").forEach(function (link) {
+    link.addEventListener("click", function (e) {
+      e.preventDefault();
+      var el = document.getElementById(link.getAttribute("data-spy"));
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+  (function () {
+    var links = [].slice.call(document.querySelectorAll(".toc-link"));
+    var els = links.map(function (l) { return document.getElementById(l.getAttribute("data-spy")); }).filter(Boolean);
+    var raf = 0;
+    function compute() {
+      raf = 0;
+      var line = innerHeight * 0.35;
+      var current = els[0] ? els[0].id : null;
+      els.forEach(function (el) { if (el.getBoundingClientRect().top <= line) current = el.id; });
+      if (innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) current = els[els.length - 1] ? els[els.length - 1].id : current;
+      links.forEach(function (l) { l.classList.toggle("active", l.getAttribute("data-spy") === current); });
+    }
+    function onScroll() { if (!raf) raf = requestAnimationFrame(compute); }
+    addEventListener("scroll", onScroll, { passive: true });
+    addEventListener("resize", onScroll);
+    compute();
+  })();
+  (function () {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
+    }, { threshold: 0.15 });
+    document.querySelectorAll(".reveal").forEach(function (el) { io.observe(el); });
+  })();
+})();
+</script>
+</body>
+</html>
