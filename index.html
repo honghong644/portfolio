@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>刘思敏 — Interactive Designer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;700;900&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --rock:#1A1A1A;
+    --rock-deep:#141414;
+    --terra:#C97B63;
+    --white:#F5F5F5;
+    --mute:rgba(245,245,245,.42);
+    --faint:rgba(245,245,245,.12);
+    --serif:"Noto Serif SC", serif;
+    --mono:"Space Mono", monospace;
+    --ease-out:cubic-bezier(.16,1,.3,1);
+    --ease-back:cubic-bezier(.34,1.4,.5,1);
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  html, body{
+    background:var(--rock);
+    color:var(--white);
+    font-family:var(--serif);
+    -webkit-font-smoothing:antialiased;
+    text-rendering:optimizeLegibility;
+  }
+  body{ overflow-x:hidden; }
+
+  /* hide native cursor only on fine-pointer devices when custom cursor active */
+  html.cursor-custom, html.cursor-custom *{ cursor:none !important; }
+  @media (pointer:coarse){ html.cursor-custom, html.cursor-custom *{ cursor:auto !important; } }
+
+  a{ color:inherit; text-decoration:none; }
+  ::selection{ background:rgba(201,123,99,.3); color:var(--white); }
+
+  /* ---------- breathing atmosphere (slow, almost subliminal) ---------- */
+  .atmos{
+    position:fixed; inset:-20%; z-index:0; pointer-events:none;
+    opacity:.5;
+  }
+  .atmos::before, .atmos::after{
+    content:""; position:absolute; inset:0;
+    background:
+      radial-gradient(38% 44% at 28% 32%, rgba(201,123,99,.05), transparent 60%),
+      radial-gradient(46% 50% at 72% 68%, rgba(245,245,245,.035), transparent 62%),
+      radial-gradient(40% 38% at 60% 18%, rgba(201,123,99,.035), transparent 60%);
+    filter:blur(40px);
+    will-change:transform;
+  }
+  .atmos::before{ animation:drift 38s ease-in-out infinite alternate; }
+  .atmos::after{
+    transform:scale(1.3) rotate(180deg);
+    animation:drift2 46s ease-in-out infinite alternate;
+  }
+  @keyframes drift{
+    0%{ transform:translate3d(0,0,0) scale(1); }
+    50%{ transform:translate3d(2.5%,-2%,0) scale(1.08); }
+    100%{ transform:translate3d(-2%,2.5%,0) scale(1.02); }
+  }
+  @keyframes drift2{
+    0%{ transform:translate3d(0,0,0) scale(1.3) rotate(180deg); }
+    100%{ transform:translate3d(-3%,-2.5%,0) scale(1.16) rotate(186deg); }
+  }
+
+  /* ---------- stone grain ---------- */
+  .grain{
+    position:fixed; inset:-30px; z-index:1; pointer-events:none;
+    opacity:.55; mix-blend-mode:soft-light;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size:200px 200px;
+    animation:grainshift 14s steps(1) infinite;
+  }
+  @keyframes grainshift{
+    0%{ background-position:0 0; }
+    20%{ background-position:-18px 12px; }
+    40%{ background-position:14px -16px; }
+    60%{ background-position:-12px -10px; }
+    80%{ background-position:16px 14px; }
+    100%{ background-position:0 0; }
+  }
+
+  .page{ position:relative; z-index:2; }
+
+  section{ position:relative; min-height:100vh; padding:48px 6vw; }
+
+  /* ---------- masthead ---------- */
+  .masthead{
+    position:absolute; top:42px; left:6vw; right:6vw;
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-family:var(--mono); font-size:12px; letter-spacing:.22em;
+    text-transform:uppercase; color:var(--white);
+  }
+  .masthead i{ font-style:normal; color:var(--mute); }
+  .masthead .mh-r{ color:var(--mute); }
+
+  /* ---------- hero (left portrait 40% / right surname 60%) ---------- */
+  .hero{ display:flex; align-items:center; overflow:hidden; }
+  .hero-grid{ display:flex; align-items:center; width:100%; height:78vh; gap:4vw; }
+
+  .hero-photo{
+    position:relative; flex:0 0 38%; align-self:center;
+    height:74vh; will-change:transform;
+  }
+  .portrait-slot{
+    display:block; width:100%; height:100%;
+    -webkit-mask-image:radial-gradient(118% 114% at 50% 46%, #000 60%, transparent 99%);
+            mask-image:radial-gradient(118% 114% at 50% 46%, #000 60%, transparent 99%);
+    transition:filter .6s var(--ease-out);
+  }
+  .photo-cap{
+    position:absolute; left:2px; bottom:-26px;
+    font-family:var(--mono); font-size:11px; letter-spacing:.28em;
+    text-transform:uppercase; color:var(--mute);
+  }
+
+  .hero-typo{ position:relative; flex:1 1 60%; display:flex; align-items:center; justify-content:center; }
+  .surname{
+    position:relative; z-index:3; display:block;
+    font-weight:700; font-size:min(70vh, 46vw); line-height:.8;
+    color:var(--terra); letter-spacing:-.02em; will-change:transform;
+  }
+  .hero-vlabel{
+    position:absolute; right:0; bottom:2vh;
+    z-index:4; display:flex; gap:14px;
+    writing-mode:vertical-rl; text-orientation:mixed;
+  }
+  .vl-line{
+    font-family:var(--mono); font-size:13px; font-weight:700;
+    letter-spacing:.5em; text-transform:uppercase; color:var(--white);
+  }
+  .hero-vlabel .vl-line:last-child{ color:var(--mute); font-weight:400; }
+
+  .hero-ring{
+    position:absolute; z-index:1; pointer-events:none;
+    width:66vh; height:66vh; border-radius:50%;
+    border:1px solid var(--terra); opacity:.20;
+    left:50%; top:50%; margin:-33vh 0 0 -33vh;
+    will-change:transform;
+  }
+
+  .scroll-hint{
+    position:absolute; z-index:4; right:6vw; bottom:40px;
+    display:flex; flex-direction:column; align-items:center; gap:10px;
+    font-family:var(--mono); font-size:11px; letter-spacing:.3em;
+    text-transform:uppercase; color:var(--mute); will-change:transform;
+  }
+  .sh-arrow{ animation:bob 1.8s var(--ease-out) infinite; }
+  @keyframes bob{ 0%,100%{ transform:translateY(0); opacity:.5 } 50%{ transform:translateY(7px); opacity:1 } }
+
+  /* ---------- section tag (shared) ---------- */
+  .sec-tag{
+    position:absolute; top:44px; left:6vw;
+    font-family:var(--mono); font-size:12px; letter-spacing:.24em;
+    text-transform:uppercase; color:var(--white);
+  }
+  .sec-tag i{ font-style:normal; color:var(--mute); margin-left:8px; }
+
+  /* prominent bordered button → About page */
+  .about-btn{
+    position:absolute; top:38px; left:6vw; z-index:6;
+    display:inline-flex; align-items:center; gap:12px;
+    padding:13px 24px; border:1px solid var(--terra);
+    font-family:var(--mono); font-size:13px; letter-spacing:.2em; text-transform:uppercase;
+    color:var(--terra); background:transparent;
+    transition:background-color .45s var(--ease-out), color .45s var(--ease-out), transform .45s var(--ease-back);
+  }
+  .about-btn .ab-ar{ display:inline-block; transition:transform .45s var(--ease-back); }
+  .about-btn:hover{ background:var(--terra); color:var(--rock); transform:translateY(-2px); }
+  .about-btn:hover .ab-ar{ transform:translate(3px,-3px); }
+
+  /* ---------- about (fragmented credentials) ---------- */
+  .about{ overflow:hidden; }
+  .afloat{
+    position:absolute; max-width:min(44vw, 600px);
+    transition:transform .7s var(--ease-back), opacity .6s var(--ease-out), filter .6s var(--ease-out);
+    will-change:transform, opacity;
+  }
+  .afloat.dim{ opacity:.2; filter:saturate(.35); }
+  .af-2{ max-width:none; }
+  .afloat.lift{ transform:translateY(-12px) !important; }
+
+  .af-big{
+    display:block; font-weight:700; line-height:1.02;
+    font-size:clamp(40px, 6.2vw, 96px); letter-spacing:-.01em;
+  }
+  .af-sub{
+    display:block; margin-top:16px;
+    font-family:var(--mono); font-size:clamp(13px,1.3vw,16px);
+    letter-spacing:.18em; text-transform:uppercase; color:var(--mute);
+  }
+  .af-sub::before{ content:"— "; color:var(--terra); }
+  .af-mid{
+    display:block; font-family:var(--mono); font-weight:700; white-space:nowrap;
+    font-size:clamp(16px, 2vw, 27px); color:var(--white); line-height:1.55;
+  }
+  .af-mid em{ font-style:normal; color:var(--terra); }
+  .af-unit{ white-space:nowrap; }
+  .af-paren{ color:var(--mute); font-weight:400; font-size:.62em; }
+  .af-bar{ color:var(--faint); margin:0 .5em; font-weight:400; }
+  .af-small{
+    display:block; font-size:clamp(16px, 1.7vw, 22px);
+    line-height:1.7; color:var(--mute); max-width:26ch;
+  }
+  .af-data:hover em{ animation:pulse 1.3s var(--ease-out) infinite; }
+  @keyframes pulse{
+    0%,100%{ text-shadow:0 0 0 rgba(201,123,99,0); }
+    50%{ text-shadow:0 0 26px rgba(201,123,99,.9); }
+  }
+
+  /* ---------- works (horizontal scrolling gallery) ---------- */
+  .works{ display:flex; flex-direction:column; justify-content:center; padding:48px 0; overflow:hidden; }
+  .works.focusing .work-item{ opacity:.4; filter:saturate(.4); transition:opacity .5s var(--ease-out), filter .5s var(--ease-out); }
+  .works.focusing .work-item.linked{ opacity:1; filter:none; }
+  .works-head{
+    display:flex; justify-content:space-between; align-items:baseline;
+    padding:0 6vw; margin-bottom:7vh;
+  }
+  .works-tag{ position:static; }
+  .works-hint{
+    font-family:var(--mono); font-size:12px; letter-spacing:.24em;
+    text-transform:uppercase; color:var(--mute);
+  }
+  .works-hint i{ font-style:normal; color:var(--terra); margin-left:8px; }
+
+  .works-track{
+    display:flex; align-items:center; gap:13vw;
+    overflow-x:auto; overflow-y:hidden;
+    padding:0 12vw 8px; scrollbar-width:none; cursor:grab;
+  }
+  .works-track::-webkit-scrollbar{ display:none; }
+  .works-track.grabbing{ cursor:grabbing; }
+
+  .work-item{ flex:0 0 auto; width:46vw; will-change:transform; transition:opacity .5s var(--ease-out); }
+  .work-frame{ position:relative; width:100%; aspect-ratio:16/9; overflow:hidden; }
+  .work-img{
+    display:block; width:100%; height:100%;
+    filter:var(--age, grayscale(1));
+    transition:filter .6s var(--ease-out), transform .7s var(--ease-back);
+  }
+  .work-item:hover .work-img,
+  .work-item.linked .work-img{ filter:none; transform:translateY(-14px) scale(1.012); }
+
+  .work-cap{ display:flex; align-items:baseline; gap:14px; margin-top:26px; }
+  .work-cn{ font-weight:700; font-size:clamp(20px,2vw,30px); color:var(--white); }
+  .work-go{
+    font-style:normal; font-family:var(--mono); font-size:.6em; color:var(--terra);
+    margin-left:.5em; opacity:0; transform:translate(-4px,4px);
+    display:inline-block; transition:opacity .45s var(--ease-out), transform .45s var(--ease-back);
+  }
+  .work-link{ cursor:pointer; }
+  .work-link:hover .work-go,
+  .work-item.linked .work-go{ opacity:1; transform:none; }
+  .work-no{
+    margin-left:auto; font-family:var(--mono); font-size:12px;
+    letter-spacing:.2em; color:var(--terra);
+  }
+  .work-no::before{ content:"/ "; color:var(--faint); }
+
+  /* ---------- project directory (full roster) ---------- */
+  .works-dir{
+    display:flex; flex-wrap:wrap; justify-content:center; align-items:baseline;
+    gap:0 4px; margin-top:8vh; padding:0 6vw;
+  }
+  .dir-name{
+    white-space:nowrap; cursor:pointer;
+    font-family:var(--mono); font-size:clamp(13px,1.25vw,16px);
+    letter-spacing:.06em; color:color-mix(in srgb, var(--terra) 62%, var(--rock));
+    padding:6px 14px; transition:color .45s var(--ease-out), transform .45s var(--ease-back);
+  }
+  .dir-name:hover, .dir-name.linked{ color:var(--terra); transform:translateY(-3px); }
+  .dir-sep{ color:var(--faint); font-family:var(--mono); font-size:13px; }
+
+  .works-end{
+    flex:0 0 auto; align-self:center; padding-right:12vw; text-align:center;
+    font-family:var(--mono); font-size:clamp(28px,4vw,56px); font-weight:700;
+    letter-spacing:.1em; color:var(--terra); line-height:1.4;
+  }
+  .works-end i{ font-style:normal; font-size:14px; letter-spacing:.2em; color:var(--terra); }
+
+  /* ---------- footer marquee ---------- */
+  .footer{ min-height:0; padding:0; position:relative; z-index:2; }
+  .marquee{
+    background:var(--terra); color:var(--rock);
+    display:flex; overflow:hidden; padding:26px 0;
+    border-top:1px solid rgba(26,26,26,.18);
+  }
+  .marquee-track{
+    display:flex; flex:0 0 auto; white-space:nowrap;
+    animation:slide 38s linear infinite;
+  }
+  .marquee-item{
+    font-family:var(--mono); font-weight:700;
+    font-size:clamp(22px, 3vw, 40px); letter-spacing:.04em;
+    padding-right:18px;
+  }
+  @keyframes slide{ from{ transform:translateX(0) } to{ transform:translateX(-100%) } }
+
+  /* ---------- custom cursor ---------- */
+  .cursor-ring, .cursor-dot{
+    position:fixed; top:0; left:0; z-index:9999; pointer-events:none;
+    border-radius:50%;
+  }
+  .cursor-ring{
+    width:34px; height:34px; border:1.5px solid var(--terra);
+    transition:width .4s var(--ease-back), height .4s var(--ease-back),
+               background-color .4s var(--ease-out), border-color .4s var(--ease-out);
+  }
+  .cursor-ring.is-hot{
+    width:84px; height:84px; border-color:var(--terra); border-width:1.5px;
+    background:color-mix(in srgb, var(--terra) 14%, transparent);
+  }
+  .cursor-dot{ width:5px; height:5px; background:var(--terra); }
+  .cursor-ring.is-hot ~ .cursor-dot{ opacity:0; }
+
+  @media (pointer:coarse){ .cursor-ring,.cursor-dot{ display:none; } }
+
+  /* ---------- responsive ---------- */
+  @media (max-width:860px){
+    .hero-grid{ flex-direction:column; height:auto; gap:6vh; padding-top:90px; }
+    .hero-photo{ flex:none; width:74vw; height:48vh; align-self:flex-start; }
+    .hero-typo{ flex:none; }
+    .surname{ font-size:min(44vh,74vw); }
+    .hero-vlabel{ position:static; writing-mode:horizontal-tb; flex-direction:row; gap:18px; margin-top:8px; }
+    .work-item{ width:80vw; }
+    .works-track{ gap:18vw; padding:0 10vw; }
+    .afloat{ position:relative !important; top:auto !important; left:auto !important; max-width:88vw; margin-bottom:48px; }
+    .af-mid{ white-space:normal; }
+    .about{ display:flex; flex-direction:column; justify-content:center; padding-top:120px; }
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    .marquee-track{ animation:none; }
+    .sh-arrow{ animation:none; }
+    .atmos::before, .atmos::after{ animation:none; }
+    .grain{ animation:none; }
+  }
+</style>
+</head>
+<body>
+  <div class="atmos" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+
+  <main class="page">
+    <!-- ===================== HERO ===================== -->
+    <section class="hero">
+      <header class="masthead">
+        <span class="mh-l">刘思敏<i> / LIU SIMIN</i></span>
+        <span class="mh-r">PORTFOLIO — ©2026</span>
+      </header>
+
+      <div class="hero-grid">
+        <div class="hero-photo" data-depth="7">
+          <image-slot id="portrait" class="portrait-slot" shape="rect" fit="cover"
+            src="images/portrait-hero.jpg"
+            style="filter:grayscale(.22) contrast(.88) sepia(.14) brightness(1.02)"
+            placeholder="拖入职业形象照 / Drop your portrait"></image-slot>
+          <span class="photo-cap">FIG.01 — PORTRAIT</span>
+        </div>
+
+        <div class="hero-typo">
+          <div class="hero-ring" data-depth="40" aria-hidden="true"></div>
+          <span class="surname" data-depth="6">刘</span>
+          <div class="hero-vlabel">
+            <span class="vl-line">INTERACTIVE</span>
+            <span class="vl-line">DESIGNER</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="scroll-hint" data-depth="3">
+        <span>SCROLL</span><span class="sh-arrow">↓</span>
+      </div>
+    </section>
+
+    <!-- ===================== ABOUT ===================== -->
+    <section class="about" id="about">
+      <a class="about-btn" href="about.html" data-hot>关于我 / About <span class="ab-ar">↗</span></a>
+
+      <div class="afloat af-1" data-hot style="top:23%; left:10%">
+        <span class="af-big">智能交互设计<br />应届生</span>
+        <span class="af-sub">天津仁爱学院</span>
+      </div>
+
+      <div class="afloat af-2 af-data" data-hot style="top:62%; left:14%">
+        <span class="af-mid">
+          <span class="af-unit"><em>GPA 3.45</em><span class="af-paren">（专业前 15%）</span></span>
+          <span class="af-bar">/</span>
+          <span class="af-unit"><em>4</em> 项市级大创</span>
+          <span class="af-bar">/</span>
+          <span class="af-unit"><em>2</em> 项设计奖项</span>
+        </span>
+      </div>
+
+      <div class="afloat af-3" data-hot style="top:29%; left:58%">
+        <span class="af-small">专注于工程逻辑与美学体验的平衡，<br />熟悉全流程落地。</span>
+      </div>
+    </section>
+
+    <!-- ===================== WORKS ===================== -->
+    <section class="works" id="works">
+      <div class="works-head">
+        <span class="sec-tag works-tag">作品 / WORKS<i>— 03</i></span>
+        <span class="works-hint">拖动浏览 <i>DRAG →</i></span>
+      </div>
+
+      <div class="works-track" id="worksTrack">
+        <figure class="work-item work-link" data-magnet data-link="work-1" data-href="智采灵枢.html">
+          <div class="work-frame" data-hot>
+            <image-slot id="work-1" class="work-img" shape="rect" fit="cover" src="images/home-1.jpg" style="--age:grayscale(1) contrast(.95)" placeholder="项目图 01 · 16:9"></image-slot>
+          </div>
+          <figcaption class="work-cap">
+            <span class="work-cn">智采灵枢<i class="work-go" aria-hidden="true">↗</i></span>
+            <span class="work-no">01</span>
+          </figcaption>
+        </figure>
+
+        <figure class="work-item work-link" data-magnet data-link="work-2" data-href="万物的客舍.html">
+          <div class="work-frame" data-hot>
+            <image-slot id="work-2" class="work-img" shape="rect" fit="cover" src="images/home-2.jpg" style="--age:grayscale(1) contrast(.95)" placeholder="项目图 02 · 16:9"></image-slot>
+          </div>
+          <figcaption class="work-cap">
+            <span class="work-cn">万物的客舍<i class="work-go" aria-hidden="true">↗</i></span>
+            <span class="work-no">02</span>
+          </figcaption>
+        </figure>
+
+        <figure class="work-item work-link" data-magnet data-link="work-3" data-href="随行公交.html">
+          <div class="work-frame" data-hot>
+            <image-slot id="work-3" class="work-img" shape="rect" fit="cover" src="images/home-4.jpg" style="--age:grayscale(1) contrast(.95)" placeholder="项目图 03 · 16:9"></image-slot>
+          </div>
+          <figcaption class="work-cap">
+            <span class="work-cn">随行公交<i class="work-go" aria-hidden="true">↗</i></span>
+            <span class="work-no">03</span>
+          </figcaption>
+        </figure>
+
+        <figure class="work-item work-link" data-magnet data-link="work-4" data-href="沉默玩家.html">
+          <div class="work-frame" data-hot>
+            <image-slot id="work-4" class="work-img" shape="rect" fit="cover" src="images/home-3.jpg" style="--age:grayscale(1) contrast(.95)" placeholder="项目图 04 · 16:9"></image-slot>
+          </div>
+          <figcaption class="work-cap">
+            <span class="work-cn">沉默玩家<i class="work-go" aria-hidden="true">↗</i></span>
+            <span class="work-no">04</span>
+          </figcaption>
+        </figure>
+
+        <figure class="work-item work-link" data-magnet data-link="work-5" data-href="心流咖啡厅.html">
+          <div class="work-frame" data-hot>
+            <image-slot id="work-5" class="work-img" shape="rect" fit="cover" src="images/home-5.jpg" style="--age:grayscale(1) contrast(.95)" placeholder="项目图 05 · 16:9"></image-slot>
+          </div>
+          <figcaption class="work-cap">
+            <span class="work-cn">心流咖啡厅<i class="work-go" aria-hidden="true">↗</i></span>
+            <span class="work-no">05</span>
+          </figcaption>
+        </figure>
+
+        <figure class="work-item work-link" data-magnet data-link="work-6" data-href="水轮机组AR.html">
+          <div class="work-frame" data-hot>
+            <image-slot id="work-6" class="work-img" shape="rect" fit="cover" src="images/hydro-ar.jpg" style="--age:grayscale(1) contrast(.95)" placeholder="项目图 06 · 16:9"></image-slot>
+          </div>
+          <figcaption class="work-cap">
+            <span class="work-cn">水轮机组AR<i class="work-go" aria-hidden="true">↗</i></span>
+            <span class="work-no">06</span>
+          </figcaption>
+        </figure>
+
+        <figure class="work-item work-link" data-magnet data-link="work-7" data-href="知绘APP.html">
+          <div class="work-frame" data-hot>
+            <image-slot id="work-7" class="work-img" shape="rect" fit="cover" src="images/home-7.jpg" style="--age:grayscale(1) contrast(.95)" placeholder="项目图 07 · 16:9"></image-slot>
+          </div>
+          <figcaption class="work-cap">
+            <span class="work-cn">知绘APP<i class="work-go" aria-hidden="true">↗</i></span>
+            <span class="work-no">07</span>
+          </figcaption>
+        </figure>
+
+        <figure class="work-item work-link" data-magnet data-link="work-8" data-href="My Note.html">
+          <div class="work-frame" data-hot>
+            <image-slot id="work-8" class="work-img" shape="rect" fit="cover" src="images/home-8.jpg" style="--age:grayscale(1) contrast(.95)" placeholder="项目图 08 · 16:9"></image-slot>
+          </div>
+          <figcaption class="work-cap">
+            <span class="work-cn">My Note<i class="work-go" aria-hidden="true">↗</i></span>
+            <span class="work-no">08</span>
+          </figcaption>
+        </figure>
+
+        <div class="works-end">END<br /><i>— 期待与您共事</i></div>
+      </div>
+
+      <nav class="works-dir" aria-label="项目名录">
+        <span class="dir-name" data-hot data-link="work-1" data-href="智采灵枢.html">智采灵枢</span>
+        <span class="dir-sep" aria-hidden="true">/</span>
+        <span class="dir-name" data-hot data-link="work-2" data-href="万物的客舍.html">万物的客舍</span>
+        <span class="dir-sep" aria-hidden="true">/</span>
+        <span class="dir-name" data-hot data-link="work-3" data-href="随行公交.html">随行公交</span>
+        <span class="dir-sep" aria-hidden="true">/</span>
+        <span class="dir-name" data-hot data-link="work-4" data-href="沉默玩家.html">沉默玩家</span>
+        <span class="dir-sep" aria-hidden="true">/</span>
+        <span class="dir-name" data-hot data-link="work-5" data-href="心流咖啡厅.html">心流咖啡厅</span>
+        <span class="dir-sep" aria-hidden="true">/</span>
+        <span class="dir-name" data-hot data-link="work-6" data-href="水轮机组AR.html">水轮机组AR</span>
+        <span class="dir-sep" aria-hidden="true">/</span>
+        <span class="dir-name" data-hot data-link="work-7" data-href="知绘APP.html">知绘APP</span>
+        <span class="dir-sep" aria-hidden="true">/</span>
+        <span class="dir-name" data-hot data-link="work-8" data-href="My Note.html">My Note</span>
+      </nav>
+    </section>
+
+    <!-- ===================== FOOTER ===================== -->
+    <footer class="footer">
+      <div class="marquee">
+        <div class="marquee-track" id="mq1"></div>
+        <div class="marquee-track" id="mq2" aria-hidden="true"></div>
+      </div>
+    </footer>
+  </main>
+
+  <div class="cursor-ring" aria-hidden="true"></div>
+  <div class="cursor-dot" aria-hidden="true"></div>
+
+  <script src="image-slot.js"></script>
+  <script src="atmosphere.js"></script>
+  <script>
+  (function () {
+    "use strict";
+    var PARALLAX = 1; // depth multiplier
+
+    /* ---------- footer marquee fill ---------- */
+    (function () {
+      var phrase = "© 2026 LIU SIMIN — SEEKING FULL-TIME OPPORTUNITIES —";
+      var train = "";
+      for (var i = 0; i < 4; i++) train += '<span class="marquee-item">' + phrase + '&nbsp;</span>';
+      document.getElementById("mq1").innerHTML = train;
+      document.getElementById("mq2").innerHTML = train;
+    })();
+
+    /* ---------- cursor + parallax + magnetic engine (single rAF) ---------- */
+    (function () {
+      var fine = window.matchMedia("(pointer: fine)").matches;
+      document.documentElement.classList.toggle("cursor-custom", fine);
+      if (!fine) return;
+      var ring = document.querySelector(".cursor-ring");
+      var dot = document.querySelector(".cursor-dot");
+
+      var t = { x: innerWidth / 2, y: innerHeight / 2 };
+      var ringPos = { x: t.x, y: t.y }, dotPos = { x: t.x, y: t.y };
+      var par = { x: 0, y: 0, lx: 0, ly: 0 };
+
+      addEventListener("pointermove", function (e) {
+        t.x = e.clientX; t.y = e.clientY;
+        par.x = e.clientX / innerWidth - 0.5;
+        par.y = e.clientY / innerHeight - 0.5;
+      });
+
+      document.querySelectorAll("[data-hot]").forEach(function (el) {
+        el.addEventListener("pointerenter", function () { ring.classList.add("is-hot"); });
+        el.addEventListener("pointerleave", function () { ring.classList.remove("is-hot"); });
+      });
+
+      var magnets = [].slice.call(document.querySelectorAll("[data-magnet]"));
+      var magState = magnets.map(function () { return { x: 0, y: 0, tx: 0, ty: 0 }; });
+      addEventListener("pointermove", function (e) {
+        magnets.forEach(function (el, i) {
+          var r = el.getBoundingClientRect();
+          var dx = e.clientX - (r.left + r.width / 2);
+          var dy = e.clientY - (r.top + r.height / 2);
+          var radius = Math.max(r.width, r.height) * 0.6 + 90;
+          var within = Math.hypot(dx, dy) < radius;
+          magState[i].tx = within ? dx * 0.16 : 0;
+          magState[i].ty = within ? dy * 0.16 : 0;
+        });
+      });
+
+      var parallaxEls = [].slice.call(document.querySelectorAll("[data-depth]"));
+
+      (function loop() {
+        ringPos.x += (t.x - ringPos.x) * 0.16; ringPos.y += (t.y - ringPos.y) * 0.16;
+        dotPos.x += (t.x - dotPos.x) * 0.45;   dotPos.y += (t.y - dotPos.y) * 0.45;
+        ring.style.transform = "translate3d(" + ringPos.x + "px," + ringPos.y + "px,0) translate(-50%,-50%)";
+        dot.style.transform  = "translate3d(" + dotPos.x + "px," + dotPos.y + "px,0) translate(-50%,-50%)";
+
+        par.lx += (par.x - par.lx) * 0.06; par.ly += (par.y - par.ly) * 0.06;
+        parallaxEls.forEach(function (el) {
+          var f = (parseFloat(el.dataset.depth) || 0) * PARALLAX;
+          el.style.transform = "translate3d(" + (-par.lx * f).toFixed(2) + "px," + (-par.ly * f).toFixed(2) + "px,0)";
+        });
+
+        magnets.forEach(function (el, i) {
+          var s = magState[i];
+          s.x += (s.tx - s.x) * 0.18; s.y += (s.ty - s.y) * 0.18;
+          el.style.transform = "translate3d(" + s.x.toFixed(2) + "px," + s.y.toFixed(2) + "px,0)";
+        });
+
+        requestAnimationFrame(loop);
+      })();
+    })();
+
+    /* ---------- About spotlight ---------- */
+    (function () {
+      var blocks = [].slice.call(document.querySelectorAll(".about .afloat"));
+      blocks.forEach(function (b) {
+        b.addEventListener("pointerenter", function () {
+          blocks.forEach(function (x) { x.classList.toggle("dim", x !== b); });
+          b.classList.add("lift");
+        });
+        b.addEventListener("pointerleave", function () {
+          blocks.forEach(function (x) { x.classList.remove("dim"); });
+          b.classList.remove("lift");
+        });
+      });
+    })();
+
+    /* ---------- Works: drag/wheel scroll + cross-link + click-to-open ---------- */
+    (function () {
+      var works = document.querySelector(".works");
+      var track = document.getElementById("worksTrack");
+      var moved = false;
+
+      // horizontal drag
+      var down = false, startX = 0, startScroll = 0;
+      track.addEventListener("pointerdown", function (e) {
+        down = true; moved = false; startX = e.clientX; startScroll = track.scrollLeft;
+        track.classList.add("grabbing");
+      });
+      addEventListener("pointermove", function (e) {
+        if (!down) return;
+        var dx = e.clientX - startX;
+        if (Math.abs(dx) > 4) moved = true;
+        track.scrollLeft = startScroll - dx;
+      });
+      addEventListener("pointerup", function () { down = false; track.classList.remove("grabbing"); });
+
+      // vertical wheel -> horizontal
+      track.addEventListener("wheel", function (e) {
+        if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+          var atStart = track.scrollLeft <= 0 && e.deltaY < 0;
+          var atEnd = track.scrollLeft >= track.scrollWidth - track.clientWidth - 1 && e.deltaY > 0;
+          if (!atStart && !atEnd) { track.scrollLeft += e.deltaY; e.preventDefault(); }
+        }
+      }, { passive: false });
+
+      // cross-link: hover a directory name <-> its thumbnail
+      function link(id, on) {
+        works.querySelectorAll('[data-link="' + id + '"]').forEach(function (n) { n.classList.toggle("linked", on); });
+        works.classList.toggle("focusing", on);
+      }
+      var names = [].slice.call(works.querySelectorAll(".dir-name"));
+      var frames = [].slice.call(works.querySelectorAll(".work-item"));
+      names.concat(frames).forEach(function (n) {
+        var id = n.dataset.link;
+        n.addEventListener("pointerenter", function () {
+          link(id, true);
+          var f = works.querySelector('.work-item[data-link="' + id + '"]');
+          if (f && n.classList.contains("dir-name")) f.scrollIntoView({ inline: "center", block: "nearest" });
+        });
+        n.addEventListener("pointerleave", function () { link(id, false); });
+      });
+
+      // click to open detail page (thumbnails guard against drag; dir names always navigate)
+      frames.forEach(function (f) {
+        f.addEventListener("click", function () {
+          if (!moved && f.dataset.href) window.location.href = f.dataset.href;
+        });
+      });
+      names.forEach(function (n) {
+        n.addEventListener("click", function () {
+          if (n.dataset.href) window.location.href = n.dataset.href;
+        });
+      });
+    })();
+  })();
+  </script>
+</body>
+</html>
